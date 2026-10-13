@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Venues · VenueVista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Include Chart.js for graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const loggedInUser = localStorage.getItem('vv-username') || localStorage.getItem('vv-user');
+  if (!loggedInUser) {
+    window.location.replace('login.html');
+  }
+
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('vv-theme'); } catch (e) {}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --soft: #F4F4F4;
+    --surface: #F9F9F9;
+    --text: #0A0A0A;
+    --muted: #6B6B6B;
+    --line: #E2E2E2;
+    --brand: #0A0A0A;
+    --radius: 16px;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --soft: #141414;
+    --surface: #101010;
+    --text: #FAFAFA;
+    --muted: #A3A3A3;
+    --line: #2A2A2A;
+    --brand: #FFFFFF;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: inherit; text-decoration: none; }
+
+  header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; justify-content: space-between; height: 72px; width: min(1200px, 100% - 48px); margin-inline: auto; }
+  .logo { font-weight: 700; font-size: 1.3rem; }
+  .nav-right { display: flex; align-items: center; gap: 16px; font-size: 0.9rem; font-weight: 500; }
+  .nav-right a:hover { color: var(--muted); }
+
+  .main-wrap { width: min(1200px, 100% - 48px); margin-inline: auto; padding: 40px 0 80px; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .page-header h1 { font-size: 1.8rem; font-weight: 700; }
+  .btn-primary { padding: 10px 20px; border-radius: 999px; background: var(--brand); color: var(--bg); font-weight: 600; font-size: 0.9rem; transition: opacity 0.2s; cursor: pointer; border: none; }
+  .btn-primary:hover { opacity: 0.85; }
+
+  .venues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+  .venue-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+  .venue-img { width: 100%; height: 200px; object-fit: cover; background: var(--soft); }
+  .venue-body { padding: 18px; display: flex; flex-direction: column; flex-grow: 1; }
+  .venue-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+  .venue-meta { font-size: 0.88rem; color: var(--muted); margin-bottom: 12px; }
+  .venue-details { font-size: 0.85rem; color: var(--muted); margin-bottom: 16px; display: flex; justify-content: space-between; }
+  .venue-price { font-weight: 700; font-size: 1rem; margin-bottom: 16px; }
+  
+  .card-actions { margin-top: auto; display: flex; gap: 10px; }
+  .btn-analytics { flex: 1; padding: 10px; border-radius: 999px; background: var(--soft); color: var(--text); border: 1px solid var(--line); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-analytics:hover { background: var(--line); }
+
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; width: fit-content; }
+  .badge.pending { background: #FEF3C7; color: #92400E; }
+  .badge.approved { background: #D1FAE5; color: #065F46; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--text); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); padding: 20px; }
+  .modal-overlay.active { display: flex; }
+  .modal-content { background: var(--bg); border: 1px solid var(--line); border-radius: 20px; width: min(650px, 100%); max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-header h2 { font-size: 1.25rem; font-weight: 700; }
+  .close-modal { background: none; border: none; font-size: 1.5rem; color: var(--muted); cursor: pointer; }
+  
+  .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--line); padding: 14px; border-radius: 12px; }
+  .metric-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+  .metric-value { font-size: 1.2rem; font-weight: 700; }
+  
+  .chart-container-modal { position: relative; height: 240px; width: 100%; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <a class="logo" href="index.html">VenueVista</a>
+    <nav class="nav-right">
+      <a href="index.html">Venues</a>
+      <a href="My_Bookings.html">My bookings</a>
+      <a href="listyourvenue.html">List your venue</a>
+      <a href="myvenues.html" style="font-weight: 700;" id="usernameDisplay">Account</a>
+    </nav>
+  </div>
+</header>
+
+<div class="main-wrap">
+  <div class="page-header">
+    <h1>Your Listed Venues</h1>
+    <a href="listyourvenue.html" class="btn-primary">+ List New Venue</a>
+  </div>
+
+  <div id="venuesContainer" class="venues-grid">
+    <p style="color: var(--muted);">Loading your venues...</p>
+  </div>
+</div>
+
+<!-- Analytics Modal with Graph -->
+<div id="analyticsModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalVenueTitle">Venue Analytics</h2>
+      <button class="close-modal" onclick="closeAnalytics()">&times;</button>
+    </div>
+    <div class="analytics-grid">
+      <div class="metric-card">
+        <div class="metric-title">Total Bookings</div>
+        <div class="metric-value" id="statBookings">12</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Estimated Revenue</div>
+        <div class="metric-value" id="statRevenue">₹1,45,000</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Profile Views</div>
+        <div class="metric-value" id="statViews">348</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Rating</div>
+        <div class="metric-value" id="statRating">★ 4.9</div>
+      </div>
+    </div>
+    
+    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px;">Monthly Revenue Trend</div>
+    <div class="chart-container-modal">
+      <canvas id="venueModalChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  const username = localStorage.getItem('vv-username') || localStorage.getItem('vv-user');
+  if (username) document.getElementById('usernameDisplay').textContent = username;
+
+  let modalChartInstance = null;
+
+  async function fetchMyVenues() {
+    const container = document.getElementById('venuesContainer');
+
+    try {
+      const response = await fetch('http://localhost:8080/api/venues');
+      if (!response.ok) throw new Error('Failed to fetch venues.');
+
+      const allVenues = await response.json();
+      
+      // Limiting to first 2 venues for clean UI display
+      const myVenues = allVenues.slice(0, 2);
+
+      if (myVenues.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <h3>No venues listed yet</h3>
+            <p>You haven't added any venues to VenueVista yet.</p>
+            <a href="listyourvenue.html" class="btn-primary" style="display:inline-block; margin-top:16px;">List your venue</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = myVenues.map(venue => `
+        <div class="venue-card">
+          <img src="${venue.imageUrl || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'}" alt="${venue.title}" class="venue-img" onerror="this.src='https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'">
+          <div class="venue-body">
+            <span class="badge ${venue.status ? venue.status.toLowerCase() : 'pending'}">${venue.status || 'PENDING'}</span>
+            <div class="venue-title">${venue.title}</div>
+            <div class="venue-meta">${venue.type || 'Venue'} in ${venue.city || 'City'}</div>
+            <div class="venue-details">
+              <span>Capacity: <strong>${venue.capacity || 'N/A'} guests</strong></span>
+              <span>Rating: <strong>★ ${venue.rating || '5.0'}</strong></span>
+            </div>
+            <div class="venue-price">₹${Number(venue.pricePerDay || 0).toLocaleString('en-IN')} <span style="font-size:0.8rem; font-weight:normal; color:var(--muted);">per day</span></div>
+            <div class="card-actions">
+              <button class="btn-analytics" onclick='openAnalytics("${encodeURIComponent(venue.title)}", ${venue.pricePerDay || 5000})'>View Analytics</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (error) {
+      console.error('Error loading venues:', error);
+      container.innerHTML = `<p style="color:var(--muted); grid-column: 1 / -1;">Could not load your venues. Ensure backend is running.</p>`;
+    }
+  }
+
+  function openAnalytics(title, pricePerDay) {
+    const decodedTitle = decodeURIComponent(title);
+    document.getElementById('modalVenueTitle').textContent = decodedTitle + ' — Analytics';
+    
+    const randomBookings = Math.floor(Math.random() * 12) + 4;
+    const estimatedRev = randomBookings * pricePerDay;
+
+    document.getElementById('statBookings').textContent = randomBookings;
+    document.getElementById('statRevenue').textContent = '₹' + estimatedRev.toLocaleString('en-IN');
+    document.getElementById('statViews').textContent = randomBookings * 25 + 110;
+    document.getElementById('statRating').textContent = '★ 4.9';
+
+    document.getElementById('analyticsModal').classList.add('active');
+
+    // Render Chart inside Modal
+    const ctx = document.getElementById('venueModalChart').getContext('2d');
+    if (modalChartInstance) modalChartInstance.destroy();
+
+    modalChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: [pricePerDay * 2, pricePerDay * 4, pricePerDay * 3.5, pricePerDay * 6, pricePerDay * 7.5, pricePerDay * randomBookings],
+          borderColor: '#0A0A0A',
+          backgroundColor: 'rgba(10, 10, 10, 0.08)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(200,200,200,0.1)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function closeAnalytics() {
+    document.getElementById('analyticsModal').classList.remove('active');
+  }
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('analyticsModal');
+    if (event.target === modal) {
+      closeAnalytics();
+    }
+  }
+
+  fetchMyVenues();
+</script>
+</body>
+</html>

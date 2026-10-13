@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment · Venue Vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('vv-theme'); } catch (e) {}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --soft: #F4F4F4;
+    --text: #0A0A0A;
+    --muted: #6B6B6B;
+    --line: #E2E2E2;
+    --brand-grad: linear-gradient(135deg, var(--text), var(--muted));
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --soft: #141414;
+    --text: #FAFAFA;
+    --muted: #A3A3A3;
+    --line: #2A2A2A;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: inherit; text-decoration: none; }
+  button, input { font-family: inherit; }
+
+  header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; justify-content: space-between; height: 72px; width: min(1180px, 100% - 48px); margin-inline: auto; }
+  .logo { font-weight: 700; font-size: 1.3rem; }
+  .logo span { background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .right { display: flex; align-items: center; gap: 8px; }
+  .pill-link { padding: 10px 14px; border-radius: 999px; font-size: .9rem; font-weight: 500; }
+  .pill-link:hover { background: var(--soft); }
+
+  main { flex: 1; width: min(540px, 100% - 48px); margin: 0 auto; padding: 32px 0 72px; }
+  
+  .timer-box {
+    background: #FFF3CD; color: #856404; border: 1px solid #FFEEBA;
+    padding: 12px 18px; border-radius: 12px; font-weight: 600; font-size: .9rem;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+  }
+  :root[data-theme="dark"] .timer-box {
+    background: #2D2411; color: #F6D365; border-color: #4A3B18;
+  }
+  .timer-box span { font-weight: 700; font-size: 1.05rem; }
+
+  h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; }
+  .sub { color: var(--muted); font-size: .95rem; margin-bottom: 24px; }
+
+  .card { border: 1px solid var(--line); border-radius: 18px; padding: 24px; background: var(--bg); box-shadow: 0 8px 30px rgba(0,0,0,.06); }
+  .price-summary { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .price-summary span { color: var(--muted); font-size: .95rem; }
+  .price-summary strong { font-size: 1.5rem; font-weight: 700; }
+
+  .payment-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab-btn {
+    flex: 1; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--bg); color: var(--text); font-size: .9rem; font-weight: 600;
+    cursor: pointer; text-align: center; transition: all .15s;
+  }
+  .tab-btn.active { border-color: var(--text); background: var(--text); color: var(--bg); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .upi-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .upi-app-btn {
+    padding: 12px 8px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--soft); text-align: center; font-size: .85rem; font-weight: 600;
+    cursor: pointer; border-style: dashed;
+  }
+  .upi-app-btn:hover { border-color: var(--text); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: .78rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .form-group input { width: 100%; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font-size: .95rem; }
+  .form-group input:focus { outline: 2px solid var(--text); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn { width: 100%; margin-top: 10px; padding: 16px; border: 0; border-radius: 12px; background: var(--text); color: var(--bg); font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity .15s; text-align: center; }
+  .btn:hover { opacity: .88; }
+
+  footer { border-top: 1px solid var(--line); background: var(--soft); padding: 22px 0; color: var(--muted); font-size: .85rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <a class="logo" href="index.html">Venue<span>Vista</span></a>
+    <nav class="right">
+      <a class="pill-link" href="My_Bookings.html">My bookings</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="timer-box" id="timerBox">
+    <span>⏰ Time remaining to pay:</span>
+    <span id="timer">10:00</span>
+  </div>
+
+  <h1>Payment Details</h1>
+  <p class="sub">Choose payment mode to finalize your booking</p>
+
+  <div class="card">
+    <div class="price-summary">
+      <span>Total Amount</span>
+      <strong id="displayAmount">₹0</strong>
+    </div>
+
+    <div class="payment-tabs">
+      <button type="button" class="tab-btn active" id="tabUpi">UPI Payment</button>
+      <button type="button" class="tab-btn" id="tabCard">Credit / Debit Card</button>
+    </div>
+
+    <div class="tab-content active" id="upiSection">
+      <p style="font-size: .85rem; color: var(--muted); margin-bottom: 12px;">Select Quick UPI App:</p>
+      <div class="upi-apps">
+        <div class="upi-app-btn" onclick="setUpiSuffix('@okaxis')">GPay</div>
+        <div class="upi-app-btn" onclick="setUpiSuffix('@ybl')">PhonePe</div>
+        <div class="upi-app-btn" onclick="setUpiSuffix('@paytm')">Paytm</div>
+      </div>
+
+      <form id="upiForm">
+        <div class="form-group">
+          <label for="upiId">Enter UPI ID / VPA</label>
+          <input type="text" id="upiId" placeholder="username@upi or mobile@paytm" required>
+        </div>
+        <button type="submit" class="btn" id="upiSubmitBtn">Pay with UPI</button>
+      </form>
+    </div>
+
+    <div class="tab-content" id="cardSection">
+      <form id="cardForm">
+        <div class="form-group">
+          <label for="cardName">Name on Card</label>
+          <input type="text" id="cardName" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label for="cardNumber">Card Number</label>
+          <input type="text" id="cardNumber" placeholder="4532 •••• •••• 8890" maxlength="19">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="expDate">Expiry Date</label>
+            <input type="text" id="expDate" placeholder="MM/YY" maxlength="5">
+          </div>
+          <div class="form-group">
+            <label for="cvv">CVV</label>
+            <input type="password" id="cvv" placeholder="•••" maxlength="4">
+          </div>
+        </div>
+        <button type="submit" class="btn" id="cardSubmitBtn">Pay with Card</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer>&copy; Venue Vista</footer>
+
+<script>
+  const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+
+  // Safe 10-Minute Countdown Timer
+  let timeLeft = 600;
+  const timerEl = document.getElementById('timer');
+  const countdown = setInterval(() => {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    if (timerEl) {
+      timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      alert('Payment window expired. Please try reserving again.');
+      window.location.href = 'index.html';
+    }
+    timeLeft--;
+  }, 1000);
+
+  // Tab switcher
+  const tabUpi = document.getElementById('tabUpi');
+  const tabCard = document.getElementById('tabCard');
+  const upiSection = document.getElementById('upiSection');
+  const cardSection = document.getElementById('cardSection');
+
+  tabUpi.addEventListener('click', () => {
+    tabUpi.classList.add('active');
+    tabCard.classList.remove('active');
+    upiSection.classList.add('active');
+    cardSection.classList.remove('active');
+  });
+
+  tabCard.addEventListener('click', () => {
+    tabCard.classList.add('active');
+    tabUpi.classList.remove('active');
+    cardSection.classList.add('active');
+    upiSection.classList.remove('active');
+  });
+
+  function setUpiSuffix(suffix) {
+    const input = document.getElementById('upiId');
+    const val = input.value.split('@')[0];
+    input.value = (val || 'mobile') + suffix;
+    input.focus();
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(location.search);
+    let checkoutData = null;
+
+    try {
+      const stored = localStorage.getItem('vv-checkout-payload') || localStorage.getItem('vv-current-booking');
+      if (stored) checkoutData = JSON.parse(stored);
+    } catch (e) {}
+
+    // Reliable amount calculation with absolute safeguard fallback
+    let totalAmount = Number(params.get('amount')) || 0;
+    if (!totalAmount || totalAmount <= 0) {
+      totalAmount = (checkoutData && Number(checkoutData.total)) || (checkoutData && Number(checkoutData.price)) || 47655;
+    }
+
+    const venueId = params.get('venueId') || (checkoutData && checkoutData.venueId) || '1';
+
+    document.getElementById('displayAmount').textContent = inr(totalAmount);
+
+   function processPayment(method, btnId) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = true;
+      btn.textContent = 'Processing Payment...';
+
+      let userId = localStorage.getItem('vv-userId');
+      if (!userId && checkoutData && checkoutData.userId) {
+        userId = checkoutData.userId;
+      }
+
+     const bookingPayload = {
+        userId: userId ? Number(userId) : 1, // Fallback to user ID 1 if null
+        venueId: venueId ? Number(venueId) : 1,
+        date: (checkoutData && checkoutData.date) || params.get('date') || new Date().toISOString().split('T')[0],
+        guests: (checkoutData && checkoutData.guests) || Number(params.get('guests')) || 1,
+        total: totalAmount,
+        paymentMethod: method
+      };
+
+      fetch('http://localhost:8080/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingPayload)
+      })
+      .then(async response => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Failed to save booking');
+        }
+        return response.json();
+      })
+      .then(savedBooking => {
+        console.log('Saved to MySQL:', savedBooking);
+        localStorage.removeItem('vv-checkout-payload');
+        localStorage.removeItem('vv-current-booking');
+        window.location.href = 'My_Bookings.html?status=success';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Database save failed: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = method === 'UPI' ? 'Pay with UPI' : 'Pay with Card';
+      });
+    }
+
+    document.getElementById('upiForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      processPayment('UPI', 'upiSubmitBtn');
+    });
+
+    document.getElementById('cardForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      processPayment('Card', 'cardSubmitBtn');
+    });
+  });
+</script>
+</body>
+</html>

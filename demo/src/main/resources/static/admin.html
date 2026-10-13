@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Dashboard · Venue Vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="vv-data.js"></script>
+
+<style>
+  :root { 
+    --bg: #FFFFFF; 
+    --soft: #F4F4F4; 
+    --text: #0A0A0A; 
+    --muted: #6B6B6B; 
+    --line: #E2E2E2;
+    --success: #10B981;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --r: 12px; 
+  }
+  :root[data-theme="dark"] { 
+    --bg: #0A0A0A; 
+    --soft: #141414; 
+    --text: #FAFAFA; 
+    --muted: #A3A3A3; 
+    --line: #2A2A2A; 
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    background: var(--bg); 
+    color: var(--text); 
+    padding: 24px; 
+    min-height: 100vh; 
+  }
+  
+  header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 32px; 
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+  
+  .logo { 
+    font-weight: 700; 
+    font-size: 1.3rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+  }
+  
+  .logo span { color: var(--text); }
+  .badge { 
+    background: var(--danger); 
+    color: white; 
+    padding: 4px 12px; 
+    border-radius: 999px; 
+    font-size: 0.75rem; 
+    font-weight: 600;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    border-radius: var(--r);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .btn.danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .btn.danger:hover {
+    background: #DC2626;
+  }
+
+  .btn.primary {
+    background: #0A0A0A;
+    color: white;
+  }
+
+  .btn.primary:hover {
+    background: #333;
+  }
+
+  .btn.success {
+    background: var(--success);
+    color: white;
+  }
+
+  .btn.success:hover {
+    background: #059669;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tab {
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--soft);
+    padding: 20px;
+    border-radius: var(--r);
+    border: 1px solid var(--line);
+  }
+
+  .stat-card p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .stat-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .venue-card {
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .venue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 12px;
+  }
+
+  .venue-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .status-badge.pending {
+    background: var(--warning);
+    color: white;
+  }
+
+  .status-badge.approved {
+    background: var(--success);
+    color: white;
+  }
+
+  .status-badge.rejected {
+    background: var(--danger);
+    color: white;
+  }
+
+  .venue-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+  }
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detail-item strong {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .venue-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .action-btn.approve {
+    background: var(--success);
+    color: white;
+  }
+
+  .action-btn.reject {
+    background: var(--danger);
+    color: white;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+  }
+
+  th {
+    background: var(--soft);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  tr:hover {
+    background: var(--soft);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+  }
+
+  .empty p {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <div class="logo">VenueVista</div>
+    <span class="badge">ADMIN PANEL</span>
+  </div>
+  <button class="btn danger" onclick="logoutAdmin()">Logout</button>
+</header>
+
+<main>
+  <!-- Tabs Navigation -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('venues')">Venue Reviews</button>
+    <button class="tab" onclick="switchTab('bookings')">Bookings</button>
+    <button class="tab" onclick="switchTab('analytics')">Analytics</button>
+  </div>
+
+  <!-- VENUES REVIEW TAB -->
+  <div id="venues-tab" class="tab-content">
+    <section class="stats">
+      <div class="stat-card">
+        <p>Pending Review</p>
+        <h2 id="statPending">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Approved</p>
+        <h2 id="statApproved">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Rejected</p>
+        <h2 id="statRejected">0</h2>
+      </div>
+    </section>
+
+    <h3 style="margin-bottom: 16px; font-size: 1.1rem;">Pending Venue Approvals</h3>
+    <div id="pendingVenuesContainer">
+      <div class="empty"><p>Loading venues...</p></div>
+    </div>
+  </div>
+
+  <!-- BOOKINGS TAB -->
+  <div id="bookings-tab" class="tab-content" style="display: none;">
+    <section class="stats">
+      <div class="stat-card">
+        <p>Total Bookings</p>
+        <h2 id="statBookings">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Confirmed Bookings</p>
+        <h2 id="statConfirmed">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Pending Bookings</p>
+        <h2 id="statPendingBookings">0</h2>
+      </div>
+    </section>
+
+    <div style="margin-bottom: 16px;">
+      <input type="text" id="searchBookings" placeholder="Search by booking ID, venue, or date..." style="width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: var(--r); font-family: inherit;">
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Venue</th>
+            <th>Date</th>
+            <th>Guests</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="bookingsTable">
+          <tr><td colspan="6" class="empty"><p>Loading bookings...</p></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div id="analytics-tab" class="tab-content" style="display: none;">
+    <section class="stats">
+      <div class="stat-card">
+        <p>Total Venues</p>
+        <h2 id="analyticsTotal">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Active Venues</p>
+        <h2 id="analyticsActive">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Total Bookings</p>
+        <h2 id="analyticsBookings">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Pending Reviews</p>
+        <h2 id="analyticsPending">0</h2>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  const API_BASE_URL = 'http://localhost:8080/api';
+
+  // Check if user is authenticated as admin
+  window.addEventListener('DOMContentLoaded', () => {
+    const isAdmin = localStorage.getItem('vv-admin') === 'true';
+    if (!isAdmin) {
+      alert('You must log in as admin to access this page.');
+      window.location.href = 'login.html?mode=admin';
+    }
+  });
+
+  function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').style.display = 'block';
+    event.target.classList.add('active');
+  }
+
+  async function loadPendingVenues() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/venues/pending`);
+      const venues = await response.json();
+      
+      const container = document.getElementById('pendingVenuesContainer');
+      
+      if (venues.length === 0) {
+        container.innerHTML = '<div class="empty"><p>No pending venues for review.</p></div>';
+        return;
+      }
+
+      container.innerHTML = venues.map(v => `
+        <div class="venue-card">
+          <div class="venue-header">
+            <div>
+              <div class="venue-title">${v.title}</div>
+              <span class="status-badge pending">Pending Review</span>
+            </div>
+          </div>
+          <div class="venue-details">
+            <div class="detail-item">
+              <strong>City</strong>
+              <span>${v.city}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Type</strong>
+              <span>${v.type}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Capacity</strong>
+              <span>${v.capacity} guests</span>
+            </div>
+            <div class="detail-item">
+              <strong>Price</strong>
+              <span>₹${v.pricePerDay.toLocaleString('en-IN')}/day</span>
+            </div>
+          </div>
+          <div style="background: var(--bg); padding: 12px; border-radius: 6px; margin-bottom: 16px; line-height: 1.5; font-size: 0.9rem;">
+            <strong>Description:</strong>
+            <p>${v.description || 'No description provided.'}</p>
+          </div>
+          <div class="venue-actions">
+            <button class="action-btn approve" onclick="approveVenue(${v.id})">✓ Approve</button>
+            <button class="action-btn reject" onclick="rejectVenue(${v.id})">✕ Reject</button>
+          </div>
+        </div>
+      `).join('');
+    } catch (error) {
+      console.error('Error loading pending venues:', error);
+      document.getElementById('pendingVenuesContainer').innerHTML = '<div class="empty"><p>Error loading venues.</p></div>';
+    }
+  }
+
+  async function approveVenue(id) {
+    if (!confirm('Approve this venue?')) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/venues/${id}/approve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        alert('Venue approved successfully!');
+        loadPendingVenues();
+        loadStats();
+      }
+    } catch (error) {
+      console.error('Error approving venue:', error);
+      alert('Error approving venue');
+    }
+  }
+
+  async function rejectVenue(id) {
+    if (!confirm('Reject this venue?')) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/venues/${id}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        alert('Venue rejected');
+        loadPendingVenues();
+        loadStats();
+      }
+    } catch (error) {
+      console.error('Error rejecting venue:', error);
+      alert('Error rejecting venue');
+    }
+  }
+
+  async function loadBookings() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/bookings`);
+      const bookings = await response.json();
+      
+      document.getElementById('statBookings').textContent = bookings.length;
+      const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+      const pending = bookings.filter(b => b.status === 'pending').length;
+      
+      document.getElementById('statConfirmed').textContent = confirmed;
+      document.getElementById('statPendingBookings').textContent = pending;
+
+      const tbody = document.getElementById('bookingsTable');
+      if (bookings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty"><p>No bookings yet.</p></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = bookings.map(b => `
+        <tr>
+          <td><b>${b.id || 'N/A'}</b></td>
+          <td>${b.venueId || 'N/A'}</td>
+          <td>${b.date || 'N/A'}</td>
+          <td>${b.guests || 0}</td>
+          <td>₹${(b.total || 0).toLocaleString('en-IN')}</td>
+          <td><span style="background: var(--soft); padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">${b.status || 'pending'}</span></td>
+        </tr>
+      `).join('');
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/analytics`);
+      const data = await response.json();
+      
+      document.getElementById('statPending').textContent = data.pendingVenues;
+      document.getElementById('statApproved').textContent = data.approvedVenues;
+      document.getElementById('statRejected').textContent = data.rejectedVenues;
+      
+      document.getElementById('analyticsTotal').textContent = data.totalVenues;
+      document.getElementById('analyticsActive').textContent = data.approvedVenues;
+      document.getElementById('analyticsBookings').textContent = data.totalBookings;
+      document.getElementById('analyticsPending').textContent = data.pendingVenues;
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
+  }
+
+  function logoutAdmin() {
+    localStorage.removeItem('vv-username');
+    localStorage.removeItem('vv-admin');
+    window.location.href = 'index.html';
+  }
+
+  // Initial load
+  loadPendingVenues();
+  loadBookings();
+  loadStats();
+
+  // Refresh every 30 seconds
+  setInterval(() => {
+    loadPendingVenues();
+    loadBookings();
+    loadStats();
+  }, 30000);
+</script>
+
+</body>
+</html>
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 32px; 
+    padding-bottom: 16px; 
+    border-bottom: 1px solid var(--line); 
+  }
+  .logo { font-size: 1.25rem; font-weight: 700; text-decoration: none; color: inherit; }
+  .logo span { color: var(--muted); }
+  .badge { 
+    background: #000; 
+    color: #fff; 
+    padding: 3px 8px; 
+    border-radius: 6px; 
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    margin-left: 8px;
+  }
+
+  /* Stats Grid */
+  .stats { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 16px; 
+    margin-bottom: 32px; 
+  }
+  .card { 
+    padding: 20px; 
+    border: 1px solid var(--line); 
+    border-radius: var(--r); 
+    background: var(--bg); 
+  }
+  .card p { font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+  .card h2 { font-size: 1.6rem; font-weight: 700; }
+
+  /* Toolbar */
+  .toolbar { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 16px; 
+    flex-wrap: wrap; 
+  }
+  .search-input { 
+    padding: 10px 14px; 
+    border: 1px solid var(--line); 
+    border-radius: 8px; 
+    background: var(--bg); 
+    color: var(--text); 
+    font-size: 0.9rem; 
+    min-width: 280px; 
+  }
+  .btn { 
+    padding: 10px 16px; 
+    border-radius: 8px; 
+    border: 1px solid var(--line); 
+    background: var(--text); 
+    color: var(--bg); 
+    font-weight: 600; 
+    font-size: 0.88rem; 
+    cursor: pointer; 
+  }
+  .btn.secondary { background: var(--bg); color: var(--text); }
+  .btn.danger { background: #dc2626; color: #fff; border: none; }
+  .btn:hover { opacity: 0.9; }
+
+  /* Data Table */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+  th, td { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  th { background: var(--soft); font-weight: 600; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+
+  .status { 
+    display: inline-block; 
+    padding: 3px 8px; 
+    border-radius: 6px; 
+    font-size: 0.78rem; 
+    font-weight: 600; 
+    text-transform: capitalize; 
+  }
+  .status.confirmed { background: #dcfce7; color: #15803d; }
+  .status.pending { background: #fef9c3; color: #a16207; }
+  .status.cancelled { background: #fee2e2; color: #b91c1c; }
+
+  .act-btn { 
+    background: transparent; 
+    border: none; 
+    color: #dc2626; 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 0.85rem; 
+  }
+  .act-btn:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <a class="logo" href="index.html">Venue<span>Vista</span></a>
+    <span class="badge">ADMIN PANEL</span>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    <button class="btn secondary" onclick="clearData()">Reset Local Bookings</button>
+    <button class="btn danger" onclick="logoutAdmin()">Logout</button>
+  </div>
+</header>
+
+<main>
+  <!-- Summary Cards -->
+  <section class="stats">
+    <div class="card"><p>Total Reservations</p><h2 id="statBookings">0</h2></div>
+    <div class="card"><p>Confirmed Revenue</p><h2 id="statRevenue">₹0</h2></div>
+    <div class="card"><p>Active Date Holds</p><h2 id="statPending">0</h2></div>
+  </section>
+
+  <!-- Controls -->
+  <div class="toolbar">
+    <input type="text" class="search-input" id="search" placeholder="Search by Booking ID, Venue, or Date..." oninput="renderTable()">
+  </div>
+
+  <!-- Bookings Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>Venue</th>
+          <th>Date</th>
+          <th>Guests</th>
+          <th>Total Price</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bookingTable">
+        <!-- JS renders rows dynamically -->
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  // Helper to safely get stored bookings
+  function getBookings() {
+    try {
+      return JSON.parse(localStorage.getItem('vv-bookings')) || [];
+    } catch(e) {
+      return [];
+    }
+  }
+
+  // Calculate and update KPI Cards
+  function renderStats(bookings) {
+    document.getElementById('statBookings').textContent = bookings.length;
+    
+    const confirmed = bookings.filter(b => b.status === 'confirmed');
+    const revenue = confirmed.reduce((sum, b) => sum + Number(b.price || b.total || 0), 0);
+    document.getElementById('statRevenue').textContent = '₹' + revenue.toLocaleString('en-IN');
+
+    const pending = bookings.filter(b => b.status === 'pending');
+    document.getElementById('statPending').textContent = pending.length;
+  }
+
+  // Render Table Rows based on Search Input
+  function renderTable() {
+    const bookings = getBookings();
+    renderStats(bookings);
+
+    const query = document.getElementById('search').value.toLowerCase().trim();
+    const tbody = document.getElementById('bookingTable');
+
+    const filtered = bookings.filter(b => 
+      String(b.id || '').toLowerCase().includes(query) ||
+      String(b.venueTitle || '').toLowerCase().includes(query) ||
+      String(b.date || '').includes(query)
+    );
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">No records found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(b => `
+      <tr>
+        <td><b>${b.id}</b></td>
+        <td>${b.venueTitle || 'Grand Palace Hall'}</td>
+        <td>${b.date || 'N/A'}</td>
+        <td>${b.guests || 1}</td>
+        <td>₹${Number(b.price || b.total || 0).toLocaleString('en-IN')}</td>
+        <td><span class="status ${b.status || 'pending'}">${b.status || 'pending'}</span></td>
+        <td>
+          ${b.status !== 'cancelled' ? `<button class="act-btn" onclick="cancelBooking('${b.id}')">Cancel</button>` : '—'}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Cancel a booking manually
+  function cancelBooking(id) {
+    if (!confirm(`Cancel booking ${id}?`)) return;
+    
+    let bookings = getBookings();
+    const idx = bookings.findIndex(b => String(b.id) === String(id));
+    if (idx !== -1) {
+      bookings[idx].status = 'cancelled';
+      localStorage.setItem('vv-bookings', JSON.stringify(bookings));
+      renderTable();
+    }
+  }
+
+  // Reset demo storage data
+  function clearData() {
+    if (confirm("Are you sure you want to clear all saved mock bookings?")) {
+      localStorage.removeItem('vv-bookings');
+      sessionStorage.clear();
+      renderTable();
+    }
+  }
+
+  // Admin Logout
+  function logoutAdmin() {
+    localStorage.removeItem('vv_user_role');
+    localStorage.setItem('vv_logged_in', 'false');
+    window.location.href = 'index.html';
+  }
+
+  // Load table on startup
+  renderTable();
+</script>
+</body>
+</html>

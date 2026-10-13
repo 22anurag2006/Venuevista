@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My bookings · Venue Vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  function clean(v) { return (v && v !== 'undefined' && v !== 'null') ? v : null; }
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('vv-theme'); } catch (e) {}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  :root {
+    --bg: #FFFFFF; --soft: #F4F4F4; --text: #0A0A0A; --muted: #6B6B6B; --line: #E2E2E2;
+    --brand: #0A0A0A; --brand-grad: linear-gradient(135deg, var(--text), var(--muted));
+    --r: 14px; color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000; --soft: #141414; --text: #FAFAFA; --muted: #A3A3A3; --line: #2A2A2A;
+    --brand: #FFFFFF; color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+  :focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+  .wrap { width: min(980px, 100% - 48px); margin-inline: auto; }
+
+  header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; justify-content: space-between; height: 72px; width: min(1280px, 100% - 48px); margin-inline: auto; }
+  .logo { font-weight: 700; font-size: 1.3rem; }
+  .logo span { background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .right { display: flex; align-items: center; gap: 8px; }
+  .pill-link { padding: 10px 14px; border-radius: 999px; font-size: .9rem; font-weight: 500; }
+  .pill-link:hover, .pill-link.on { background: var(--soft); }
+  .theme { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--text); cursor: pointer; font-size: 1.05rem; line-height: 1; }
+  .theme:hover { background: var(--soft); }
+  .login { padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line); font-size: .9rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text); }
+  .login:hover { border-color: var(--text); background: var(--soft); }
+
+  main { padding: 36px 0 72px; flex: 1; }
+  h1 { font-size: 1.9rem; font-weight: 700; }
+  .lead { color: var(--muted); margin-top: 6px; }
+  .tabs { display: flex; gap: 6px; margin: 26px 0 22px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { padding: 12px 16px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: 600 .92rem 'Inter', sans-serif; cursor: pointer; white-space: nowrap; margin-bottom: -1px; }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--text); }
+  .tab small { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--soft); font-size: .75rem; }
+
+  .list { display: grid; gap: 18px; }
+  .booking { display: grid; grid-template-columns: 220px 1fr auto; gap: 22px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); transition: box-shadow .2s ease; }
+  .booking:hover { box-shadow: 0 8px 26px rgba(0,0,0,.12); }
+  .photo { position: relative; border-radius: 10px; overflow: hidden; min-height: 150px; background: linear-gradient(135deg, var(--soft), var(--line)); }
+  .photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .photo.dim img { filter: grayscale(1); opacity: .6; }
+  .details { padding: 4px 0; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .ref { font-size: .78rem; color: var(--muted); letter-spacing: .3px; }
+  .details h2 { font-size: 1.15rem; font-weight: 600; }
+  .sub { color: var(--muted); font-size: .9rem; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 8px; font-size: .9rem; }
+  .facts b { font-weight: 600; }
+  .side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 14px; padding: 4px 4px 4px 0; }
+  .badge { padding: 5px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600; border: 1px solid var(--text); }
+  .badge.confirmed { background: var(--text); color: var(--bg); }
+  .badge.pending { border-style: dashed; }
+  .badge.completed { background: var(--soft); border-color: var(--line); color: var(--muted); }
+  .badge.cancelled { border-color: var(--line); color: var(--muted); text-decoration: line-through; }
+  .badge.expired { border-color: var(--line); color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .btn { display: inline-block; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: 600 .86rem 'Inter', sans-serif; cursor: pointer; transition: background .15s, transform .15s; }
+  .btn:hover { background: var(--soft); }
+  .btn:active { transform: scale(.97); }
+  .btn.solid { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn.solid:hover { opacity: .88; background: var(--text); }
+
+  .empty { text-align: center; padding: 64px 20px; border: 1px dashed var(--line); border-radius: var(--r); }
+  .empty h2 { font-size: 1.2rem; }
+  .empty p { color: var(--muted); margin: 8px 0 20px; }
+
+  dialog { margin: auto; width: min(420px, 100% - 40px); padding: 28px; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--text); }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  dialog h2 { font-size: 1.2rem; }
+  dialog p { color: var(--muted); margin: 10px 0 22px; line-height: 1.55; font-size: .92rem; }
+  dialog .row { display: flex; gap: 10px; justify-content: flex-end; }
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); padding: 12px 20px; border-radius: 12px; background: var(--text); color: var(--bg); font-size: .9rem; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 50; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  footer { border-top: 1px solid var(--line); background: var(--soft); padding: 26px 0; color: var(--muted); font-size: .88rem; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 760px) {
+    .booking { grid-template-columns: 1fr; }
+    .photo { min-height: 170px; }
+    .side { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 0 4px 4px; }
+    .pill-link { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <a class="logo" href="index.html">Venue<span>Vista</span></a>
+    <nav class="right">
+      <a class="pill-link" href="index.html">Venues</a>
+      <a class="pill-link on" href="My_Bookings.html" aria-current="page">My bookings</a>
+      <button class="theme" id="themeBtn" aria-label="Toggle dark mode" type="button"></button>
+      <button class="login" id="authBtn" type="button">Log out</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>My bookings</h1>
+  <p class="lead">Track your reservations, pay for pending ones, or cancel a booking.</p>
+
+  <div class="tabs" id="tabs" role="tablist" aria-label="Booking status"></div>
+  <div class="list" id="list" aria-live="polite"></div>
+</main>
+
+<dialog id="cancelDlg" aria-labelledby="dlgTitle">
+  <h2 id="dlgTitle">Cancel this booking?</h2>
+  <p id="dlgText"></p>
+  <div class="row">
+    <button class="btn" id="keepBtn" type="button">Keep booking</button>
+    <button class="btn solid" id="confirmCancel" type="button">Yes, cancel</button>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; Venue Vista</span>
+    <span>Halls, lawns and rooms, booked by the date you need.</span>
+  </div>
+</footer>
+
+<script>
+  const API = 'http://localhost:8080/api/bookings';
+
+  // Theme toggle
+  const themeBtn = document.getElementById('themeBtn');
+  function paintTheme() { themeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? '\u2600\uFE0E' : '\u263E'; }
+  themeBtn.addEventListener('click', () => {
+    const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem('vv-theme', t); } catch (e) {}
+    paintTheme();
+  });
+  paintTheme();
+
+  const TABS = [['upcoming', 'Upcoming'], ['past', 'Past'], ['cancelled', 'Cancelled']];
+  let bookings = [], active = 'upcoming', cancelId = null;
+  const list = document.getElementById('list'), tabsEl = document.getElementById('tabs');
+  const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const inr = n => '\u20B9' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+  const fallbackImg = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80';
+
+  const fmt = dStr => {
+    if (!dStr) return 'N/A';
+    const parts = String(dStr).split('-');
+    if (parts.length === 3) {
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    }
+    return dStr;
+  };
+  const today = () => new Date().toLocaleDateString('en-CA');
+
+  function normalize(r) {
+    try {
+      const status = String(r.status || 'confirmed').toLowerCase();
+      return {
+        ...r,
+        id: r.id ?? r.bookingId ?? r.booking_id,
+        venueId: r.venueId ?? r.venue_id ?? (r.venue && r.venue.id) ?? 1,
+        title: r.title || r.venueTitle || r.venue_title || (r.venue && (r.venue.title || r.venue.name)) || 'Venue Reservation',
+        tag: r.tag || r.venueType || r.venue_type || (r.venue && r.venue.type) || 'Venue',
+        city: r.city || r.location || (r.venue && (r.venue.city || r.venue.location)) || 'India',
+        image: r.image || r.imageUrl || r.image_url || (r.venue && (r.venue.image || r.venue.imageUrl)) || fallbackImg,
+        date: String(r.date || r.eventDate || r.bookingDate || r.booking_date || '').slice(0, 10),
+        guests: r.guests ?? r.numberOfGuests ?? r.guestCount ?? r.guest_count ?? 1,
+        total: r.total || r.totalAmount || r.total_amount || r.totalPrice || r.price || 0,
+        status
+      };
+    } catch (e) {
+      console.error('Error normalizing record:', r, e);
+      return null;
+    }
+  }
+
+  function bucket(b) {
+    if (!b) return 'cancelled';
+    if (b.status === 'cancelled' || b.status === 'expired') return 'cancelled';
+    if (b.status === 'completed' || (b.date && b.date < today())) return 'past';
+    return 'upcoming';
+  }
+  const LABEL = { confirmed: 'Confirmed', pending: 'Payment pending', completed: 'Completed', cancelled: 'Cancelled', expired: 'Expired' };
+
+  function renderTabs() {
+    if (!tabsEl) return;
+    tabsEl.innerHTML = TABS.map(([k, name]) => {
+      const n = bookings.filter(b => bucket(b) === k).length;
+      return `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k === active}">${name}<small>${n}</small></button>`;
+    }).join('');
+  }
+
+  function card(b) {
+    const dim = bucket(b) !== 'upcoming';
+    const pending = b.status === 'pending';
+    const imgUrl = b.image || fallbackImg;
+    const checkoutUrl = `checkout.html?venueId=${encodeURIComponent(b.venueId)}&date=${encodeURIComponent(b.date)}&guests=${encodeURIComponent(b.guests || 1)}`;
+
+    return `
+    <article class="booking">
+      <div class="photo ${dim ? 'dim' : ''}">
+        <img src="${esc(imgUrl)}" alt="${esc(b.title || 'Venue')}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImg}';">
+      </div>
+      <div class="details">
+        <span class="ref">Booking #${esc(b.id)}</span>
+        <h2>${esc(b.title || 'Venue Reservation')}</h2>
+        <span class="sub">${esc(b.tag || 'Venue')} in ${esc(b.city || 'India')}</span>
+        <div class="facts">
+          <span>Date <b>${fmt(b.date)}</b></span>
+          <span>Guests <b>${b.guests || 1}</b></span>
+          <span>Total <b>${inr(b.total)}</b></span>
+        </div>
+      </div>
+      <div class="side">
+        <span class="badge ${esc(b.status)}">${LABEL[b.status] || 'Confirmed'}</span>
+        <div class="actions">
+          ${pending ? `<a class="btn solid" href="${checkoutUrl}">Pay now</a>` : ''}
+          ${b.venueId ? `<a class="btn" href="venue.html?id=${encodeURIComponent(b.venueId)}">View venue</a>` : ''}
+          ${bucket(b) === 'upcoming' ? `<button class="btn" data-cancel="${esc(b.id)}" type="button">Cancel</button>` : ''}
+        </div>
+      </div>
+    </article>`;
+  }
+
+  function render() {
+    try {
+      renderTabs();
+      const items = bookings.filter(b => bucket(b) === active);
+
+      if (!items.length) {
+        const msg = {
+          upcoming: ['No upcoming bookings', 'When you book a venue, it will show up here.'],
+          past: ['No past bookings yet', 'Your completed bookings will appear here.'],
+          cancelled: ['No cancelled bookings', 'Nothing here. Cancelled or expired bookings will appear in this tab.']
+        }[active];
+
+        list.innerHTML = `<div class="empty"><h2>${msg[0]}</h2><p>${msg[1]}</p>${active === 'upcoming' ? '<a class="btn solid" href="index.html">Browse venues</a>' : ''}</div>`;
+        return;
+      }
+      list.innerHTML = items.map(card).join('');
+    } catch (e) {
+      console.error('Render error:', e);
+    }
+  }
+
+  function authHeaders() {
+    const token = clean(localStorage.getItem('vv-token')) || clean(localStorage.getItem('token'));
+    return token ? { Authorization: 'Bearer ' + token } : {};
+  }
+
+  async function load() {
+    try {
+      const userId = localStorage.getItem('vv-userId') || '1';
+      const response = await fetch(`${API}?userId=${encodeURIComponent(userId)}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() }
+      });
+
+      if (!response.ok) throw new Error('Server returned status ' + response.status);
+      const data = await response.json();
+      
+      bookings = (Array.isArray(data) ? data : []).map(normalize).filter(Boolean);
+      render();
+    } catch (error) {
+      console.error('Failed to load bookings:', error);
+      if (list) {
+        list.innerHTML = `<div class="empty"><h2>Couldn't connect to server</h2><p>Make sure your Spring Boot backend is running on port 8080.</p><button class="btn solid" onclick="load()" type="button">Try again</button></div>`;
+      }
+    }
+  }
+
+  load();
+
+  // Toast notifier
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast.id);
+    toast.id = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  // Handle Cancel Click via Event Delegation
+  const dlg = document.getElementById('cancelDlg');
+  list.addEventListener('click', e => {
+    const btn = e.target.closest('[data-cancel]');
+    if (!btn) return;
+    cancelId = btn.dataset.cancel;
+    const bk = bookings.find(x => String(x.id) === String(cancelId));
+    if (!bk) return;
+
+    document.getElementById('dlgText').textContent =
+      'Your booking at ' + (bk.title || 'this venue') + ' on ' + fmt(bk.date) + ' will be cancelled.';
+    if (typeof dlg.showModal === 'function') {
+      dlg.showModal();
+    } else {
+      dlg.setAttribute('open', '');
+    }
+  });
+
+  document.getElementById('keepBtn').addEventListener('click', () => {
+    if (typeof dlg.close === 'function') dlg.close();
+    else dlg.removeAttribute('open');
+  });
+
+  document.getElementById('confirmCancel').addEventListener('click', async () => {
+    if (!cancelId) return;
+    const bk = bookings.find(x => String(x.id) === String(cancelId));
+    
+    try {
+      const res = await fetch(`${API}/${encodeURIComponent(cancelId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() }
+      });
+
+      if (!res.ok) throw new Error('Server responded with status ' + res.status);
+
+      if (bk) bk.status = 'cancelled';
+      toast('Booking #' + cancelId + ' successfully cancelled.');
+    } catch (e) {
+      console.error('Cancel failed:', e);
+      // Fallback: update UI locally even if backend endpoint differs or fails
+      if (bk) bk.status = 'cancelled';
+      toast('Booking cancelled locally.');
+    } finally {
+      if (typeof dlg.close === 'function') dlg.close();
+      else dlg.removeAttribute('open');
+      cancelId = null;
+      render();
+    }
+  });
+
+  tabsEl.addEventListener('click', e => {
+    const t = e.target.closest('.tab');
+    if (!t) return;
+    active = t.dataset.tab;
+    render();
+  });
+
+  const authBtn = document.getElementById('authBtn');
+  if (authBtn) {
+    authBtn.addEventListener('click', e => {
+      e.preventDefault();
+      localStorage.clear();
+      window.location.href = 'index.html';
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Venue Details · Venue Vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('vv-theme'); } catch (e) {}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  :root { 
+    --bg: #FFFFFF; 
+    --soft: #F4F4F4; 
+    --text: #0A0A0A; 
+    --muted: #6B6B6B; 
+    --line: #E2E2E2; 
+    --r: 14px;
+    --brand-grad: linear-gradient(135deg, var(--text), var(--muted)); 
+    color-scheme: light; 
+  }
+  :root[data-theme="dark"] { 
+    --bg: #000000; 
+    --soft: #141414; 
+    --text: #FAFAFA; 
+    --muted: #A3A3A3; 
+    --line: #2A2A2A; 
+    color-scheme: dark; 
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: inherit; text-decoration: none; }
+  button, input { font-family: inherit; }
+
+  header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; justify-content: space-between; height: 72px; width: min(1180px, 100% - 48px); margin-inline: auto; }
+  .logo { font-weight: 700; font-size: 1.3rem; }
+  .logo span { background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .right { display: flex; align-items: center; gap: 8px; }
+  .pill-link { padding: 10px 14px; border-radius: 999px; font-size: .9rem; font-weight: 500; }
+  .pill-link:hover { background: var(--soft); }
+  .theme { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--text); cursor: pointer; font-size: 1.05rem; line-height: 1; }
+  .theme:hover { background: var(--soft); }
+
+  main { flex: 1; width: min(1180px, 100% - 48px); margin: 0 auto; padding: 36px 0 72px; }
+
+  .hero-img { width: 100%; height: 400px; object-fit: cover; border-radius: 20px; background: var(--soft); margin-bottom: 32px; }
+  
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+  .loc { color: var(--muted); font-size: 1.1rem; margin-bottom: 24px; }
+  
+  .badges { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .badge { padding: 6px 14px; border-radius: 999px; background: var(--soft); font-size: .85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+
+  .desc { font-size: 1.05rem; line-height: 1.6; color: var(--muted); margin-bottom: 32px; }
+
+  .amenities h3 { font-size: 1.3rem; margin-bottom: 16px; }
+  .amenities-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; list-style: none; padding: 0; margin-bottom: 32px; }
+  .amenities-list li { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .amenities-list li::before { content: '✓'; color: var(--text); font-weight: bold; }
+
+  /* ---------- Seat map ---------- */
+  .seatsec { margin-bottom: 32px; }
+  .seatsec h3 { font-size: 1.3rem; margin-bottom: 6px; }
+  .seatsub { color: var(--muted); font-size: .95rem; margin-bottom: 16px; line-height: 1.5; }
+  .seatsub b { color: var(--text); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); margin-bottom: 14px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 14px; display: inline-block; border-radius: 4px 4px 2px 2px; border: 1px solid var(--text); }
+  .legend i.b { border-color: var(--line); background: repeating-linear-gradient(45deg, var(--line), var(--line) 3px, transparent 3px, transparent 6px); }
+  .legend i.s { background: var(--text); }
+  .seatmap { border: 1px solid var(--line); border-radius: 16px; padding: 18px 14px; overflow-x: auto; background: var(--bg); }
+  .stage { width: 70%; margin: 0 auto 18px; padding: 8px; text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: 2px; color: var(--muted); border: 1px solid var(--line); border-radius: 0 0 40px 40px; background: var(--soft); }
+  .smap { display: flex; flex-direction: column; gap: 5px; width: fit-content; min-width: max-content; margin: 0 auto; }
+  .srow { display: flex; align-items: center; gap: 5px; }
+  .rl { width: 18px; flex: none; text-align: center; font-size: .7rem; font-weight: 600; color: var(--muted); }
+  .aisle { width: 16px; flex: none; }
+  .seat { width: var(--s, 20px); height: var(--s, 20px); flex: none; padding: 0; border-radius: 5px 5px 3px 3px; border: 1px solid var(--text); background: var(--bg); cursor: pointer; transition: transform .1s, background .1s; }
+  .seat:hover:not(.booked):not(.off) { transform: scale(1.15); background: var(--soft); }
+  .seat.sel { background: var(--text); }
+  .seat.booked { border-color: var(--line); background: repeating-linear-gradient(45deg, var(--line), var(--line) 3px, transparent 3px, transparent 6px); cursor: not-allowed; }
+  .seat.off { border-color: var(--line); cursor: default; }
+  .seat:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  .seltext { margin-top: 12px; min-height: 22px; font-size: .9rem; }
+  .seltext button { margin-left: 8px; border: 0; background: none; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: .85rem; }
+  .fullnote { margin-top: 10px; font-size: .88rem; font-weight: 600; }
+
+  .booking-card { border: 1px solid var(--line); border-radius: 18px; padding: 24px; background: var(--bg); box-shadow: 0 8px 30px rgba(0,0,0,.06); position: sticky; top: 100px; }
+  .booking-price { font-size: 1.6rem; font-weight: 700; margin-bottom: 20px; }
+  .booking-price span { font-size: 1rem; color: var(--muted); font-weight: 400; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-group label { display: block; font-size: .8rem; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; color: var(--muted); }
+  .field-group input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font-size: .95rem; }
+  .field-group input:focus { outline: 2px solid var(--text); }
+  .field-group input[readonly] { background: var(--soft); }
+  .hint { margin-top: 6px; font-size: .8rem; color: var(--muted); }
+
+  .btn { width: 100%; margin-top: 10px; padding: 16px; border: 0; border-radius: 12px; background: var(--text); color: var(--bg); font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+  .btn:hover { opacity: .88; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .error-msg { color: #dc2626; font-size: .9rem; margin-top: 12px; text-align: center; display: none; font-weight: 500; }
+
+  .empty { text-align: center; padding: 60px 20px; border: 1px dashed var(--line); border-radius: var(--r); }
+  .empty p { color: var(--muted); margin: 8px 0 20px; }
+  .empty a { display: inline-block; padding: 12px 22px; border-radius: 12px; background: var(--text); color: var(--bg); font-weight: 600; }
+
+  footer { border-top: 1px solid var(--line); background: var(--soft); padding: 22px 0; color: var(--muted); font-size: .85rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <a class="logo" href="index.html">Venue<span>Vista</span></a>
+    <nav class="right">
+      <a class="pill-link" href="index.html">Venues</a>
+      <a class="pill-link" href="My_Bookings.html">My bookings</a>
+      <button class="theme" id="themeBtn" aria-label="Toggle dark mode" type="button"></button>
+    </nav>
+  </div>
+</header>
+
+<main id="app">
+  <div style="text-align: center; padding: 40px;">Loading venue details...</div>
+</main>
+
+<footer>&copy; Venue Vista</footer>
+
+<script>
+  // Theme toggle
+  const themeBtn = document.getElementById('themeBtn');
+  function paintTheme() { themeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? '\u2600\uFE0E' : '\u263E'; }
+  themeBtn.addEventListener('click', () => {
+    const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem('vv-theme', t); } catch (e) {}
+    paintTheme();
+  });
+  paintTheme();
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const inr = n => '\u20B9' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+  const fmtDate = d => new Date(d + 'T00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  const fallbackImg = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80';
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(location.search);
+    const venueId = params.get('id');
+
+    if (!venueId) {
+      $('app').innerHTML = `
+        <div class="empty">
+          <h2>No Venue Specified</h2>
+          <p>No valid venue ID was passed in the URL.</p>
+          <a href="index.html">Browse Venues</a>
+        </div>`;
+      return;
+    }
+
+    let rawVenue = null;
+    try {
+      const res = await fetch(`http://localhost:8080/api/venues/${venueId}`);
+      if (!res.ok) throw new Error('Venue not found');
+      rawVenue = await res.json();
+    } catch (err) {
+      console.error(err);
+      $('app').innerHTML = `
+        <div class="empty">
+          <h2>Venue not found</h2>
+          <p>The venue you are looking for does not exist or invalid ID was provided.</p>
+          <a href="index.html">Browse Venues</a>
+        </div>`;
+      return;
+    }
+
+    // Map Backend model fields to Frontend attributes
+    const v = {
+      id: rawVenue.id,
+      title: rawVenue.title,
+      city: rawVenue.city || rawVenue.location || 'Location',
+      district: rawVenue.district || '',
+      tag: rawVenue.type || 'Venue',
+      capacity: rawVenue.capacity || 100,
+      price: rawVenue.pricePerDay || 0,
+      rating: rawVenue.rating || 4.5,
+      reviews: rawVenue.reviewsCount || 12,
+      description: rawVenue.description || 'Experience a world-class venue fitted with flexible space, perfect seating arrangements, and premium lighting for your events.',
+      image: rawVenue.imageUrl || fallbackImg,
+      freeCancel: true,
+      amenities: rawVenue.amenities ? rawVenue.amenities.split(',').map(a => a.trim()) : ['Air Conditioning', 'Parking', 'Sound System', 'Projector & Screen', 'Catering Available']
+    };
+
+    const minDate = new Date().toISOString().split('T')[0];
+    const img = v.image || fallbackImg;
+    const startDate = params.get('date') || minDate;
+
+    $('app').innerHTML = `
+      <img class="hero-img" src="${esc(img)}" alt="${esc(v.title)}" onerror="this.onerror=null; this.src='${fallbackImg}'">
+      
+      <div class="layout">
+        <div class="details">
+          <h1>${esc(v.title)}</h1>
+          <div class="loc">${esc(v.district ? v.district + ', ' : '')}${esc(v.city)}</div>
+          
+          <div class="badges">
+            <span class="badge">\u2605 ${Number(v.rating || 0).toFixed(1)} (${v.reviews} Reviews)</span>
+            <span class="badge">${esc(v.tag)}</span>
+            <span class="badge">Max ${v.capacity} Guests</span>
+            <span class="badge" id="seatBadge">Seats: pick a date</span>
+            ${v.freeCancel ? '<span class="badge" style="background:#dcfce7;color:#166534;">Free Cancellation</span>' : ''}
+          </div>
+
+          <p class="desc">${esc(v.description)}</p>
+
+          <div class="amenities">
+            <h3>Amenities</h3>
+            <ul class="amenities-list">
+              ${(v.amenities || []).map(a => `<li>${esc(a)}</li>`).join('')}
+            </ul>
+          </div>
+
+          <section class="seatsec" aria-labelledby="seatTitle">
+            <h3 id="seatTitle">Seat map</h3>
+            <p class="seatsub" id="seatSub"></p>
+            <div class="legend">
+              <span><i></i>Available</span><span><i class="b"></i>Booked</span><span><i class="s"></i>Your selection</span>
+            </div>
+            <div class="seatmap">
+              <div class="stage">${v.tag === 'Auditorium' ? 'STAGE' : 'FRONT'}</div>
+              <div class="smap" id="smap"></div>
+            </div>
+            <div class="seltext" id="selText"></div>
+            <div class="fullnote" id="fullNote"></div>
+          </section>
+        </div>
+
+        <aside>
+          <form class="booking-card" id="bookForm">
+            <div class="booking-price">${inr(v.price)} <span>/ day</span></div>
+            
+            <div class="field-group">
+              <label for="bDate">Select Date</label>
+              <input id="bDate" type="date" min="${minDate}" value="${esc(startDate)}" required>
+            </div>
+
+            <div class="field-group">
+              <label for="bGuests">Number of Guests</label>
+              <input id="bGuests" type="number" min="1" max="${v.capacity}" value="${Math.min(10, v.capacity)}" required>
+              <div class="hint" id="guestHint"></div>
+            </div>
+
+            <button class="btn" id="reserveBtn" type="submit">Reserve Now</button>
+            <div class="error-msg" id="errorMsg"></div>
+          </form>
+        </aside>
+      </div>
+    `;
+
+    // ---------- Seat map calculations ----------
+    const cap = v.capacity;
+    const cols = cap <= 40 ? 10 : cap <= 150 ? 15 : cap <= 300 ? 20 : 30;
+    const rows = Math.ceil(cap / cols);
+    const size = cols >= 30 ? 16 : cols >= 20 ? 20 : 26;
+    const aisleAfter = Math.ceil(cols / 2);
+    const selected = new Set();
+    let bookedSet = new Set();
+
+    const rowLabel = r => (r < 26 ? '' : String.fromCharCode(65 + Math.floor(r / 26) - 1)) + String.fromCharCode(65 + (r % 26));
+    const seatName = i => rowLabel(Math.floor(i / cols)) + ((i % cols) + 1);
+
+    function seeded(str) {
+      let h = 1779033703 ^ str.length;
+      for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+      return function () {
+        h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return ((h ^= h >>> 16) >>> 0) / 4294967296;
+      };
+    }
+
+    function bookedSeats(date) {
+      const all = Array.from({ length: cap }, (_, i) => i);
+      const rnd = seeded(v.id + '|' + date);
+      const k = Math.round(cap * (0.12 + rnd() * 0.35));
+      for (let i = cap - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+      return new Set(all.slice(0, k));
+    }
+
+    function syncGuests() {
+      const g = $('bGuests'), n = selected.size;
+      if (n) { g.value = n; g.readOnly = true; $('guestHint').textContent = 'Based on your ' + n + ' selected seat' + (n > 1 ? 's' : ''); }
+      else { g.readOnly = false; $('guestHint').textContent = ''; }
+    }
+
+    function drawMap() {
+      const date = $('bDate').value;
+      bookedSet = date ? bookedSeats(date) : new Set();
+      const avail = date ? cap - bookedSet.size : null;
+      let html = '';
+      for (let r = 0; r < rows; r++) {
+        html += `<div class="srow"><span class="rl">${rowLabel(r)}</span>`;
+        for (let c = 0; c < cols; c++) {
+          const i = r * cols + c; if (i >= cap) break;
+          if (c === aisleAfter) html += '<span class="aisle"></span>';
+          if (!date) html += '<span class="seat off"></span>';
+          else if (bookedSet.has(i)) html += `<span class="seat booked" title="${seatName(i)} (booked)"></span>`;
+          else html += `<button type="button" class="seat ${selected.has(i) ? 'sel' : ''}" data-i="${i}" title="${seatName(i)}" aria-label="Seat ${seatName(i)}, available" aria-pressed="${selected.has(i)}"></button>`;
+        }
+        html += '</div>';
+      }
+      $('smap').style.setProperty('--s', size + 'px');$('smap').innerHTML = html;
+
+      const full = date && avail === 0;
+      $('seatSub').innerHTML = !date ? 'Choose a date in the booking box to see which seats are free.'
+        : full ? `No seats left on <b>${fmtDate(date)}</b>.`
+        : `<b>${avail}</b> of ${cap} seats available on <b>${fmtDate(date)}</b>. Click seats to choose where to sit.`;
+      $('seatBadge').textContent = !date ? 'Seats: pick a date' : avail + ' seats left';
+      $('fullNote').textContent = full ? 'This date is fully booked. Please pick another date.' : '';
+      $('reserveBtn').disabled = !!full;
+      drawSelection();
+    }
+
+    function drawSelection() {
+      const list = [...selected].sort((a, b) => a - b).map(seatName);
+      $('selText').innerHTML = list.length
+        ? `<b>Selected (${list.length}):</b> ${list.join(', ')}<button type="button" id="clearSel">Clear</button>` : '';
+    }
+
+    $('smap').addEventListener('click', e => {
+      const b = e.target.closest('button.seat'); if (!b) return;
+      const i = Number(b.dataset.i);
+      if (selected.has(i)) selected.delete(i); else selected.add(i);
+      b.classList.toggle('sel', selected.has(i));
+      b.setAttribute('aria-pressed', selected.has(i));
+      syncGuests(); drawSelection();
+    });
+
+    $('selText').addEventListener('click', e => {
+      if (e.target.id !== 'clearSel') return;
+      selected.clear(); syncGuests(); drawMap();
+    });
+
+    $('bDate').addEventListener('change', () => { selected.clear(); syncGuests(); drawMap(); });
+
+    drawMap();
+
+    // ---------- Reserve Action ----------
+    $('bookForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const date = $('bDate').value;
+      const guests = parseInt($('bGuests').value, 10);
+      const errObj = $('errorMsg');
+      const showErr = m => { errObj.textContent = m; errObj.style.display = 'block'; };
+      
+      errObj.style.display = 'none';
+
+      if (!date) { showErr('Please choose a date.'); return; }
+      if (!(guests >= 1) || guests > v.capacity) { showErr('Enter between 1 and ' + v.capacity + ' guests.'); return; }
+
+      const bookingData = {
+        venueId: String(v.id),
+        venueTitle: v.title,
+        price: Number(v.price),
+        date: date,
+        guests: guests,
+        seats: [...selected].sort((a, b) => a - b).map(seatName)
+      };
+
+      try {
+        localStorage.setItem('vv-current-booking', JSON.stringify(bookingData));
+        localStorage.setItem('currentBooking', JSON.stringify(bookingData));
+        
+        window.location.href = `checkout.html?venueId=${encodeURIComponent(v.id)}&date=${encodeURIComponent(date)}&guests=${encodeURIComponent(guests)}`;
+      } catch (err) {
+        showErr('Failed to initialize checkout page.');
+      }
+    });
+  });
+</script>
+</body>
+</html>

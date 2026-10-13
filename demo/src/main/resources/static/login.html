@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Venue Vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('vv-theme'); } catch (e) {}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --soft: #F4F4F4;
+    --surface: #F7F7F7;
+    --text: #0A0A0A;
+    --muted: #6B6B6B;
+    --line: #E2E2E2;
+    --border: #E2E2E2;
+    --brand: #0A0A0A;
+    --brand-dark: #333333;
+    --brand-grad: linear-gradient(135deg, var(--text), var(--muted));
+    --grad: linear-gradient(135deg, var(--text), var(--muted));
+    --purple: var(--text);
+    --pink: var(--text);
+    --good: var(--text);
+    --r-card: 20px;
+    --r-btn: 12px;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --soft: #141414;
+    --surface: #101010;
+    --text: #FAFAFA;
+    --muted: #A3A3A3;
+    --line: #2A2A2A;
+    --border: #2A2A2A;
+    --brand: #FFFFFF;
+    --brand-dark: #D4D4D4;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Poppins', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    min-height: 100vh;
+  }
+
+  /* ---------- Left: brand panel ---------- */
+  .brand {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 56px;
+    background: transparent;
+    border-right: 1px solid var(--border);
+  }
+  .logo { font-weight: 700; font-size: 1.25rem; letter-spacing: .2px; text-decoration: none; color: var(--text); }
+  .logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .brand h1 { font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.12; font-weight: 700; max-width: 12ch; }
+  .brand p { margin-top: 16px; color: var(--muted); max-width: 38ch; line-height: 1.6; }
+
+  /* The one memorable element: a floating ticket */
+  .ticket {
+    position: relative;
+    width: min(340px, 80%);
+    margin: 32px 0;
+    padding: 22px 26px;
+    border-radius: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transform: rotate(-4deg);
+    animation: float 6s ease-in-out infinite;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 18px;
+  }
+  .ticket::before, .ticket::after {
+    content: ""; position: absolute; top: 58%; width: 22px; height: 22px;
+    background: var(--bg); border-radius: 50%; border: 1px solid var(--border);
+  }
+  .ticket::before { left: -12px; }
+  .ticket::after  { right: -12px; }
+  .ticket .title { font-weight: 600; font-size: 1.05rem; }
+  .ticket .meta { color: var(--muted); font-size: .82rem; grid-column: 1; }
+  .ticket .price { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-weight: 700; font-size: 1.3rem;
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ticket .stub { grid-column: 1 / -1; margin-top: 22px; padding-top: 16px; border-top: 2px dashed var(--border);
+    display: flex; justify-content: space-between; align-items: center; font-size: .8rem; color: var(--muted); }
+  .qr { width: 38px; height: 38px; border-radius: 6px;
+    background:
+      conic-gradient(from 90deg at 50% 50%, #fff 25%, transparent 0 50%, #fff 0 75%, transparent 0) 0 0 / 12.6px 12.6px,
+      #1a1a2a; opacity: .9; }
+  @keyframes float { 50% { transform: rotate(-4deg) translateY(-12px); } }
+
+  .ticket::before, .ticket::after { display: none; }
+  .brand small { color: var(--muted); font-size: .8rem; }
+
+  /* ---------- Right: sign-in card ---------- */
+  .panel { display: grid; place-items: center; padding: 32px 24px; }
+  .card {
+    width: 100%; max-width: 420px;
+    padding: 40px 34px;
+    border-radius: var(--r-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.14);
+  }
+  .card h2 { font-size: 1.6rem; font-weight: 600; }
+  .card .sub { color: var(--muted); margin: 8px 0 28px; line-height: 1.55; font-size: .95rem; }
+
+  .back:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+
+  .notice { margin-bottom: 18px; padding: 12px 14px; border-radius: var(--r-btn);
+    border: 1px solid var(--text); background: var(--surface);
+    color: var(--text); font-size: .9rem; line-height: 1.5; display: none; }
+  .notice.show { display: block; }
+
+  .fine { margin-top: 22px; font-size: .8rem; color: var(--muted); line-height: 1.6; }
+  .back { display: inline-block; margin-top: 26px; color: var(--text); font-size: .9rem; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+
+  /* One page-load moment: the card rises in */
+  .card { animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+
+  /* ---------- Log in / Sign up forms ---------- */
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 26px; border: 1px solid var(--border); border-radius: 12px; }
+  .tab { padding: 10px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: 600 .92rem 'Poppins', sans-serif; cursor: pointer; transition: background .15s, color .15s; }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { background: var(--text); color: var(--bg); }
+  .fld { margin-bottom: 14px; }
+  .fld label { display: block; margin-bottom: 6px; font-size: .82rem; font-weight: 600; }
+  .fld input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-btn); background: var(--bg); color: var(--text); font: 400 .95rem 'Poppins', sans-serif; }
+  .fld input::placeholder { color: var(--muted); }
+  .fld input:focus { outline: none; border-color: var(--text); box-shadow: 0 0 0 3px var(--border); }
+  .fld.bad input { border-color: var(--text); border-width: 2px; }
+  .err { margin-top: 5px; min-height: 0; font-size: .8rem; font-weight: 500; }
+  .pw { position: relative; }
+  .pw input { padding-right: 64px; }
+  .show { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); padding: 6px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: 600 .8rem 'Poppins', sans-serif; cursor: pointer; }
+  .show:hover { color: var(--text); background: var(--surface); }
+  .between { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 18px; font-size: .85rem; }
+  .check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--text); }
+  .link { text-decoration: underline; }
+  .submit { width: 100%; padding: 14px; border: 0; border-radius: var(--r-btn); background: var(--text); color: var(--bg); font: 600 1rem 'Poppins', sans-serif; cursor: pointer; transition: opacity .15s, transform .15s; }
+  .submit:hover { opacity: .88; }
+  .submit:active { transform: scale(.98); }
+  .submit[aria-busy="true"] { opacity: .6; pointer-events: none; }
+  .switch { margin-top: 18px; text-align: center; font-size: .88rem; color: var(--muted); }
+  .switch button { border: 0; background: none; color: var(--text); font: 600 .88rem 'Poppins', sans-serif; text-decoration: underline; cursor: pointer; }
+  form[hidden] { display: none; }
+  .view { animation: swap .38s cubic-bezier(.2,.8,.2,1) both; }
+  .view[hidden] { display: none; }
+  @keyframes swap { from { opacity: 0; transform: translateX(18px); } }
+  .outline { width: 100%; margin-top: 10px; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-btn); background: transparent; color: var(--text); font: 600 1rem 'Poppins', sans-serif; cursor: pointer; transition: background .15s, transform .15s; }
+  .outline:hover { background: var(--surface); }
+  .outline:active { transform: scale(.98); }
+  .outline:focus-visible, .backbtn:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+  .backbtn { margin-bottom: 16px; padding: 0; border: 0; background: none; color: var(--muted); font: 500 .88rem 'Poppins', sans-serif; cursor: pointer; }
+  .backbtn:hover { color: var(--text); }
+  #formNotice { margin-bottom: 18px; }
+  .tab:focus-visible, .submit:focus-visible, .show:focus-visible, .switch button:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+
+  .theme { position: fixed; top: 16px; right: 16px; z-index: 5; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; font-size: 1.05rem; line-height: 1; }
+  .theme:hover { background: var(--surface); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px) {
+    body { grid-template-columns: 1fr; }
+    .brand { padding: 28px 24px; min-height: 0; gap: 8px; }
+    .ticket, .brand p, .brand small { display: none; }
+    .brand h1 { font-size: 1.8rem; max-width: none; margin-top: 18px; }
+    .panel { align-items: start; padding-top: 8px; }
+    .card { padding: 30px 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <button class="theme" id="themeBtn" aria-label="Toggle dark mode" type="button"></button>
+
+  <section class="brand" aria-label="Venue Vista">
+    <a class="logo" href="index.html">Venue<span>Vista</span></a>
+
+    <div>
+      <h1>Find the venue worth celebrating in.</h1>
+      <p>Compare halls, lawns and meeting rooms, check open dates, and book your venue in one place.</p>
+
+      <div class="ticket" aria-hidden="true">
+        <div class="title">Grand Orchid Banquet</div>
+        <div class="meta">Ghaziabad · Up to 300 guests</div>
+        <div class="price">₹45,000</div>
+        <div class="stub"><span>Open on Sat, 14 Nov</span><span>Per day</span></div>
+      </div>
+    </div>
+
+    <small>© Venue Vista</small>
+  </section>
+
+  <main class="panel">
+    <div class="card">
+
+      <!-- View 1: first thing visitors see -->
+      <div class="view" id="viewStart">
+        <h2>Sign in to Venue Vista</h2>
+        <p class="sub">Log in with your email, or create a new account.</p>
+
+        <div class="notice" id="notice" role="alert"></div>
+
+        <button class="submit" id="openLogin" type="button">Log in</button>
+        <button class="outline" id="openSignup" type="button">Create an account</button>
+
+        <p class="fine">By continuing, you agree to use Venue Vista for booking venues.</p>
+        <a class="back" href="index.html">Back to venues</a>
+      </div>
+
+      <!-- View 2: appears after clicking Log in or Create an account -->
+      <div class="view" id="viewForms" hidden>
+        <button class="backbtn" id="backBtn" type="button">&#8592; Back</button>
+        <div class="tabs" role="tablist" aria-label="Log in or sign up">
+        <button class="tab" id="tabLogin" role="tab" aria-selected="true" aria-controls="loginForm" type="button">Log in</button>
+        <button class="tab" id="tabSignup" role="tab" aria-selected="false" aria-controls="signupForm" type="button">Sign up</button>
+      </div>
+
+        <h2 id="formTitle">Welcome back</h2>
+        <p class="sub" id="formSub">Log in to manage your venue bookings.</p>
+
+        <div class="notice" id="formNotice" role="alert"></div>
+
+        <!-- Existing users -->
+      <form id="loginForm" role="tabpanel" aria-labelledby="tabLogin" novalidate>
+        <div class="fld">
+          <label for="lEmail">Email</label>
+          <input id="lEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com">
+          <div class="err" id="lEmailErr"></div>
+        </div>
+        <div class="fld">
+          <label for="lPass">Password</label>
+          <div class="pw">
+            <input id="lPass" name="password" type="password" autocomplete="current-password" placeholder="Your password">
+            <button class="show" type="button" data-target="lPass" aria-label="Show password">Show</button>
+          </div>
+          <div class="err" id="lPassErr"></div>
+        </div>
+        <div class="between">
+          <label class="check"><input type="checkbox" id="remember"> Remember me</label>
+          <a href="#" class="link">Forgot password?</a>
+        </div>
+        <button class="submit" type="submit">Log in</button>
+        <p class="switch">New to Venue Vista? <button type="button" data-go="signup">Create an account</button></p>
+      </form>
+
+      <!-- New visitors -->
+      <form id="signupForm" role="tabpanel" aria-labelledby="tabSignup" novalidate hidden>
+        <div class="fld">
+          <label for="sName">Full name</label>
+          <input id="sName" name="name" type="text" autocomplete="name" placeholder="Your name">
+          <div class="err" id="sNameErr"></div>
+        </div>
+        <div class="fld">
+          <label for="sEmail">Email</label>
+          <input id="sEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com">
+          <div class="err" id="sEmailErr"></div>
+        </div>
+        <div class="fld">
+          <label for="sPass">Password</label>
+          <div class="pw">
+            <input id="sPass" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+            <button class="show" type="button" data-target="sPass" aria-label="Show password">Show</button>
+          </div>
+          <div class="err" id="sPassErr"></div>
+        </div>
+        <div class="fld">
+          <label for="sConfirm">Confirm password</label>
+          <input id="sConfirm" type="password" autocomplete="new-password" placeholder="Re-enter your password">
+          <div class="err" id="sConfirmErr"></div>
+        </div>
+        <button class="submit" type="submit">Create account</button>
+        <p class="switch">Already have an account? <button type="button" data-go="login">Log in</button></p>
+      </form>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+  const themeBtn = document.getElementById('themeBtn');
+  function paintTheme() { themeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? '\u2600\uFE0E' : '\u263E'; }
+  themeBtn.addEventListener('click', () => {
+    const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem('vv-theme', t); } catch (e) {}
+    paintTheme();
+  });
+  paintTheme();
+  const notice = document.getElementById('notice');
+
+  // Show a message if sign-in failed or a login is required
+  const params = new URLSearchParams(location.search);
+  if (params.has('error')) {
+    notice.textContent = 'Sign-in didn\u2019t finish. Please try again.';
+    notice.classList.add('show');
+  } else if (params.has('required')) {
+    notice.textContent = 'Sign in to continue.';
+    notice.classList.add('show');
+  }
+
+  // Demo sign-in: saves the user in this browser so index.html can show their name.
+  // With the Java backend set DEMO_AUTH = false and the forms post to /api/auth/login and /api/auth/signup.
+  const DEMO_AUTH = true;
+  const nameFrom = e => e.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  function demoLogin(name, email) { try { localStorage.setItem('vv-user', JSON.stringify({ name, email })); localStorage.setItem('vv-username', name); } catch (_) {} location.href = 'index.html'; }
+
+  // ---------- Log in / Sign up ----------
+  const forms = { login: document.getElementById('loginForm'), signup: document.getElementById('signupForm') };
+  const tabs = { login: document.getElementById('tabLogin'), signup: document.getElementById('tabSignup') };
+  const copy = {
+    login:  ['Welcome back', 'Log in to manage your venue bookings.'],
+    signup: ['Create your account', 'Book venues in minutes. It\u2019s free.']
+  };
+  const formNotice = document.getElementById('formNotice');
+  function showNotice(msg) { formNotice.textContent = msg; formNotice.classList.add('show'); }
+  function switchTo(mode) {
+    for (const k in forms) {
+      forms[k].hidden = k !== mode;
+      tabs[k].setAttribute('aria-selected', k === mode);
+    }
+    document.getElementById('formTitle').textContent = copy[mode][0];
+    document.getElementById('formSub').textContent = copy[mode][1];
+    formNotice.classList.remove('show');
+    history.replaceState(null, '', '#' + mode);
+  }
+  tabs.login.addEventListener('click', () => switchTo('login'));
+  tabs.signup.addEventListener('click', () => switchTo('signup'));
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => switchTo(b.dataset.go)));
+  // Start view <-> forms view
+  const vStart = document.getElementById('viewStart'), vForms = document.getElementById('viewForms');
+  function openForms(mode) {
+    vStart.hidden = true; vForms.hidden = false; switchTo(mode);
+    document.getElementById(mode === 'signup' ? 'sName' : 'lEmail').focus();
+  }
+  function openStart() {
+    vForms.hidden = true; vStart.hidden = false;
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  document.getElementById('openLogin').addEventListener('click', () => openForms('login'));
+  document.getElementById('openSignup').addEventListener('click', () => openForms('signup'));
+  document.getElementById('backBtn').addEventListener('click', openStart);
+  if (location.hash === '#signup' || params.get('mode') === 'signup') openForms('signup');
+  else if (location.hash === '#login' || params.get('mode') === 'login') openForms('login');
+
+  // Show / hide password
+  document.querySelectorAll('.show').forEach(b => b.addEventListener('click', () => {
+    const input = document.getElementById(b.dataset.target);
+    const hidden = input.type === 'password';
+    input.type = hidden ? 'text' : 'password';
+    b.textContent = hidden ? 'Hide' : 'Show';
+    b.setAttribute('aria-label', hidden ? 'Hide password' : 'Show password');
+  }));
+
+  // Validation helpers
+  const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  function setErr(input, errId, msg) {
+    const box = document.getElementById(errId);
+    box.textContent = msg || '';
+    input.closest('.fld').classList.toggle('bad', !!msg);
+    input.setAttribute('aria-invalid', !!msg);
+    return !msg;
+  }
+  async function send(url, payload, submitBtn) {
+    const label = submitBtn.textContent;
+    submitBtn.setAttribute('aria-busy', 'true');
+    submitBtn.textContent = 'Please wait\u2026';
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+      let response = {};
+      try { response = await res.json(); } catch (_) {}
+
+      if (res.ok) {
+        // ---- PASTE HERE FOR NORMAL LOGIN/SIGNUP ----
+        localStorage.removeItem('vv-userId');
+        localStorage.removeItem('vv-username');
+        localStorage.removeItem('vv-user');
+        localStorage.removeItem('vv-token');
+
+        localStorage.setItem('vv-username', response.username || response.name);
+        if (response.id || response.userId) {
+            localStorage.setItem('vv-userId', response.id || response.userId);
+        }
+        if (response.token) {
+            localStorage.setItem('vv-token', response.token);
+        }
+        localStorage.setItem('vv-user', JSON.stringify(response));
+        // ---------------------------------------------
+
+        window.location.href = 'index.html';
+        return;
+      }
+
+      let msg = response.message || 'Something went wrong. Check your details and try again.';
+      showNotice(msg);
+    } catch (_) {
+      showNotice('Can\u2019t reach the server. Make sure the app is running and try again.');
+    }
+    submitBtn.removeAttribute('aria-busy');
+    submitBtn.textContent = label;
+  }
+
+  // Existing users
+  forms.login.addEventListener('submit', e => {
+    e.preventDefault();
+    const em = document.getElementById('lEmail'), pw = document.getElementById('lPass');
+    const ok1 = setErr(em, 'lEmailErr', !em.value.trim() ? 'Enter your email.' : !emailOk(em.value.trim()) ? 'Enter a valid email, like you@example.com.' : '');
+    const ok2 = setErr(pw, 'lPassErr', !pw.value ? 'Enter your password.' : '');
+    if (ok1 && ok2 && DEMO_AUTH) { demoLogin(nameFrom(em.value.trim()), em.value.trim()); return; }
+    if (ok1 && ok2) send('/api/auth/login', { email: em.value.trim(), password: pw.value, remember: document.getElementById('remember').checked }, e.submitter || forms.login.querySelector('.submit'));
+  });
+
+  // New visitors
+  forms.signup.addEventListener('submit', e => {
+    e.preventDefault();
+    const nm = document.getElementById('sName'), em = document.getElementById('sEmail'),
+          pw = document.getElementById('sPass'), cf = document.getElementById('sConfirm');
+    const r = [
+      setErr(nm, 'sNameErr', nm.value.trim().length < 2 ? 'Enter your full name.' : ''),
+      setErr(em, 'sEmailErr', !em.value.trim() ? 'Enter your email.' : !emailOk(em.value.trim()) ? 'Enter a valid email, like you@example.com.' : ''),
+      setErr(pw, 'sPassErr', pw.value.length < 8 ? 'Use at least 8 characters.' : ''),
+      setErr(cf, 'sConfirmErr', cf.value !== pw.value ? 'Passwords don\u2019t match.' : '')
+    ];
+    if (r.every(Boolean) && DEMO_AUTH) { demoLogin(nm.value.trim(), em.value.trim()); return; }
+    if (r.every(Boolean)) send('/api/auth/signup', { name: nm.value.trim(), email: em.value.trim(), password: pw.value }, e.submitter || forms.signup.querySelector('.submit'));
+  });
+
+  // Clear an error as soon as the user edits the field
+  document.querySelectorAll('.fld input').forEach(i => i.addEventListener('input', () => {
+    i.closest('.fld').classList.remove('bad');
+    const err = i.closest('.fld').querySelector('.err'); if (err) err.textContent = '';
+  }));
+</script>
+</body>
+</html>
