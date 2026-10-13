@@ -54,7 +54,7 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Reject a venue
+    
     @PatchMapping("/venues/{id}/reject")
     public ResponseEntity<Venue> rejectVenue(@PathVariable Long id) {
         return venueRepository.findById(id)
