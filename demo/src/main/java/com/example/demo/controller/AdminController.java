@@ -66,7 +66,7 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Get all bookings
+    
     @GetMapping("/bookings")
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
