@@ -42,7 +42,7 @@ public class AdminController {
         return venueRepository.findByStatus(VenueStatus.REJECTED);
     }
 
-    // Approve a venue
+    
     @PatchMapping("/venues/{id}/approve")
     public ResponseEntity<Venue> approveVenue(@PathVariable Long id) {
         return venueRepository.findById(id)
